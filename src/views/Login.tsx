@@ -97,7 +97,7 @@ export function LoginView({ onLogin }: LoginProps) {
         </form>
 
         <div className="mt-8 pt-6 border-t border-zinc-800 w-full text-center">
-          <p className="text-xs text-zinc-500 mb-4">Or use demo access</p>
+          <p className="text-xs text-zinc-500 mb-4">Bypass Authentication</p>
           <Button variant="secondary" onClick={handleDemoAdmin} className="w-full flex justify-center items-center gap-2">
             <Shield size={16} />
             Admin Login

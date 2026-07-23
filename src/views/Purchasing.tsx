@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
-import * as htmlToImage from 'html-to-image';
 import { useStore } from '../store';
 import { Card, Table, Th, Td, Button } from '../components';
 
@@ -37,20 +36,80 @@ export function InvestmentPoolView() {
     window.print();
   };
 
-  const handleDownload = async () => {
-    const element = document.getElementById('receipt-document');
-    if (element) {
-      const dataUrl = await htmlToImage.toPng(element, { 
-        quality: 1, 
-        backgroundColor: '#ffffff',
-        pixelRatio: 2
-      });
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(dataUrl);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Investment_Receipt_${receiptContributor?.referenceId || receiptContributorId}.pdf`);
+  const handleDownload = () => {
+    if (!receiptContributor) return;
+    try {
+      const pageWidth = 280;
+      const margin = 24;
+      const pdf = new jsPDF({ unit: 'pt', format: [pageWidth, 500] });
+      let y = 46;
+
+      const center = (text: string, size: number, style: 'normal' | 'bold' | 'italic' = 'normal', font = 'courier') => {
+        pdf.setFont(font, style);
+        pdf.setFontSize(size);
+        const w = pdf.getTextWidth(text);
+        pdf.text(text, (pageWidth - w) / 2, y);
+      };
+
+      const dashedLine = () => {
+        pdf.setLineDashPattern([2, 2], 0);
+        pdf.setDrawColor(180);
+        pdf.line(margin, y, pageWidth - margin, y);
+        pdf.setLineDashPattern([], 0);
+      };
+
+      const row = (left: string, right: string, size = 9, boldRight = false) => {
+        pdf.setFont('courier', 'normal');
+        pdf.setFontSize(size);
+        pdf.setTextColor(40);
+        pdf.text(left, margin, y);
+        pdf.setFont('courier', boldRight ? 'bold' : 'normal');
+        const w = pdf.getTextWidth(right);
+        pdf.text(right, pageWidth - margin - w, y);
+      };
+
+      center('Elie', 28, 'italic', 'times');
+      y += 30;
+
+      center('Elie Group S.A', 12, 'bold');
+      y += 15;
+      pdf.setTextColor(120);
+      center('Pétion-Ville, Haïti', 8);
+      y += 11;
+      center('contact@eliegroup.com', 8);
+      y += 16;
+
+      dashedLine();
+      y += 18;
+
+      pdf.setTextColor(20);
+      row('Receipt:', receiptContributor.referenceId);
+      y += 15;
+      row('Date:', receiptContributor.dateAdded);
+      y += 15;
+      row('Contributor:', receiptContributor.name);
+      y += 16;
+
+      dashedLine();
+      y += 18;
+      
+      row('Amount Provided:', `$${(receiptContributor.amountAvailable + receiptContributor.amountUsed).toFixed(2)}`, 11, true);
+      y += 20;
+
+      dashedLine();
+      y += 20;
+
+      pdf.setTextColor(120);
+      center('Status: RECEIVED', 9);
+      y += 26;
+
+      pdf.setTextColor(20);
+      center('Thank you for your contribution!', 10, 'bold');
+
+      pdf.save(`Investment_Receipt_${receiptContributor.referenceId}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF', error);
+      alert('Failed to generate PDF.');
     }
   };
 
@@ -153,7 +212,7 @@ export function InvestmentPoolView() {
                 <div className="mt-4 text-sm text-[#475569]">
                   <p>123 Business Road</p>
                   <p>Commerce City, CC 12345</p>
-                  <p>contact@elieerp.demo</p>
+                  <p>contact@elieerp.com</p>
                 </div>
               </div>
               <div className="text-right">
@@ -432,7 +491,7 @@ export function PurchasesView() {
                         View Receipt
                       </a>
                     ) : (
-                      <Button variant="secondary" className="px-2 py-0.5 text-[10px]" onClick={() => uploadPurchaseReceipt(po.id, 'https://example.com/demo-receipt.pdf')}>
+                      <Button variant="secondary" className="px-2 py-0.5 text-[10px]" onClick={() => uploadPurchaseReceipt(po.id, window.prompt('Enter Receipt URL:'))}>
                         Upload Receipt
                       </Button>
                     )}

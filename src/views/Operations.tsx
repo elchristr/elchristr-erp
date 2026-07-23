@@ -5,18 +5,109 @@ import { Product } from '../types';
 
 export function ProductsView() {
   const { products, addProduct, updateProduct, deleteProduct } = useStore();
-  const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [showNewProduct, setShowNewProduct] = useState(false);
+  const [name, setName] = useState('');
+  const [sku, setSku] = useState('');
+  const [purchasePrice, setPurchasePrice] = useState(0);
+  const [sellingPrice, setSellingPrice] = useState(0);
+  const [currentStock, setCurrentStock] = useState(0);
+  const [imageUrl, setImageUrl] = useState('');
+
+  const handleCreateProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    addProduct({
+      name,
+      sku,
+      purchasePrice,
+      sellingPrice,
+      currentStock,
+      imageUrl,
+      status: 'Active'
+    });
+    
+    setShowNewProduct(false);
+    setName('');
+    setSku('');
+    setPurchasePrice(0);
+    setSellingPrice(0);
+    setCurrentStock(0);
+    setImageUrl('');
+  };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-zinc-100">Products</h1>
-        <Button onClick={() => addProduct({
-          name: 'New Product', sku: `SKU-${Date.now()}`, purchasePrice: 10, sellingPrice: 20, currentStock: 10, status: 'Active'
-        })}>
-          + Add Product (Demo)
+        <Button onClick={() => setShowNewProduct(!showNewProduct)}>
+          {showNewProduct ? 'Cancel' : '+ Add Product'}
         </Button>
       </div>
+
+      {showNewProduct && (
+        <Card title="Add New Product" className="border-emerald-900">
+          <form onSubmit={handleCreateProduct} className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1">Product Name</label>
+                <input 
+                  type="text" required
+                  className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 rounded-sm p-2 text-sm"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1">SKU</label>
+                <input 
+                  type="text" required
+                  className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 rounded-sm p-2 text-sm"
+                  value={sku}
+                  onChange={e => setSku(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1">Image URL (Optional)</label>
+                <input 
+                  type="text"
+                  className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 rounded-sm p-2 text-sm"
+                  value={imageUrl}
+                  onChange={e => setImageUrl(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1">Purchase Price</label>
+                <input 
+                  type="number" min="0" step="0.01" required
+                  className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 rounded-sm p-2 text-sm"
+                  value={purchasePrice}
+                  onChange={e => setPurchasePrice(Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1">Selling Price</label>
+                <input 
+                  type="number" min="0" step="0.01" required
+                  className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 rounded-sm p-2 text-sm"
+                  value={sellingPrice}
+                  onChange={e => setSellingPrice(Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1">Initial Stock</label>
+                <input 
+                  type="number" min="0" required
+                  className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 rounded-sm p-2 text-sm"
+                  value={currentStock}
+                  onChange={e => setCurrentStock(Number(e.target.value))}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit">Save Product</Button>
+            </div>
+          </form>
+        </Card>
+      )}
 
       <Card>
         <Table>
